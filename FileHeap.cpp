@@ -72,7 +72,6 @@ FilePointer* FileHeap::alloc(int size) {
 	cout << "Allocating a data chunk of size " << size << endl;
 	FilePointer *file_pointer = new FilePointer();
 	file_pointer->setSize(size);
-	char * size_in_bytes = int_to_bytes(size);
 
 	storage_file.seekp(0);
 
@@ -90,9 +89,10 @@ FilePointer* FileHeap::alloc(int size) {
 
 	file_pointer->setAddress(storage_file.tellp());
 	storage_file.seekp(-4, ios_base::cur);
+	char * size_in_bytes = int_to_bytes(size * -1);
 	storage_file.write(size_in_bytes, 4);
 	storage_file.seekp(size, ios_base::cur);
-	storage_file.write(int_to_bytes(size), 4);
+	storage_file.write(size_in_bytes, 4);
 
 	if (chunk_size == 0) {
 		storage_file.write(int_to_bytes(0), 4);
@@ -106,15 +106,46 @@ FilePointer* FileHeap::alloc(int size) {
 	return file_pointer;
 }
 
-void FileHeap::free(const FilePointer& pointer) {
+void FileHeap::free(FilePointer * pointer) {
+	storage_file.seekp(pointer->getAddress() - 4);
+	char * chunk_size_bytes = new char[4];
 
+	// Reading the size of the located space
+	storage_file.read(chunk_size_bytes, 4);
+	int chunk_size = bytes_to_int(chunk_size_bytes);
+
+	if (chunk_size >= 0) {
+		cerr << "The space you are trying to free at location " << pointer->getAddress() << " was not allocated." << endl;
+		return;
+	}
+
+	cout << "Freeing " << pointer->getSize() << " bytes at location " << pointer->getAddress() << endl;
+
+	// Freeing the space: writing the size back as a positive integer
+	storage_file.seekp(-4, ios_base::cur);
+	chunk_size_bytes = int_to_bytes(chunk_size * -1);
+	storage_file.write(chunk_size_bytes, 4);
+	storage_file.seekp(abs(chunk_size), ios_base::cur);
+	storage_file.write(chunk_size_bytes, 4);
 }
 
-char * FileHeap::getValue(const FilePointer& pointer) {
-	return 0;
+char * FileHeap::getValue(FilePointer * pointer) {
+	char * data = new char[pointer->getSize()];
+
+	cout << "Getting " << pointer->getSize() << " bytes from location " << pointer->getAddress() << endl;
+	storage_file.seekp(pointer->getAddress());
+	storage_file.read(data, pointer->getSize());
+
+	return data;
 }
 
-void FileHeap::setValue(const FilePointer& pointer, const char * data, int size) {
-
+void FileHeap::setValue(FilePointer * pointer, const char * data, int size) {
+	if (size > pointer->getSize()) {
+		cerr << "There is no enough memory for the data to be stored at location " << pointer->getAddress() << endl;
+		return;
+	}
+	cout << "Writing " << size << " bytes to location " << pointer->getAddress() << endl;
+	storage_file.seekp(pointer->getAddress());
+	storage_file.write(data, size);
 }
 

@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <time.h>
 #include "Helper.h"
+#include <iostream>
 
 char * random_generator(int size);
 
@@ -20,20 +21,22 @@ int main() {
 	FilePointer *small_pointer = file_heap.alloc(16);
 	FilePointer *big_pointer = file_heap.alloc(16 * 4);
 
-	/*char* small_data = random_generator(10);
+	char* small_data = random_generator(10);
 	file_heap.setValue(small_pointer, small_data, 10);
-
-	char* big_data = random_generator(3000);
-	file_heap.setValue(big_pointer, big_data, 3000);
 
 	char* small_data_retrieved = file_heap.getValue(small_pointer);
 	cout << small_data_retrieved << endl;
+
+	char* big_data = random_generator(50);
+	file_heap.setValue(big_pointer, big_data, 50);
 
 	char* big_data_retrieved = file_heap.getValue(big_pointer);
 	cout << big_data_retrieved << endl;
 
 	delete [] small_data;
-	delete [] big_data; */
+	delete [] big_data;
+
+	file_heap.free(small_pointer);
 
 	delete small_pointer;
 	delete big_pointer;
@@ -46,7 +49,7 @@ char * random_generator(int size) {
 	char * data = new char[size];
 	srand(time(NULL));
 	for (int i = 0; i < size; i++) {
-
+		data[i] = 'a' + (rand() % 26);
 	}
 	return data;
 }

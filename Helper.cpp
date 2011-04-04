@@ -22,13 +22,15 @@ char * int_to_bytes(int integer) {
 int bytes_to_int(const char bytes[]) {
 	int integer = bytes[0];
 	for (int i = 1; i < 4; i++) {
-		integer = (integer << 8) + bytes[i];
+		integer = (integer << 8) | bytes[i];
 	}
 	return integer;
 }
 
 void helper_test() {
-	char * res = int_to_bytes(16);
+	char * res = int_to_bytes(-16);
 	for (int i = 0; i < 4; i++) printf("%X ", res[i]);
 	printf("\n");
+	int nbr = bytes_to_int(res);
+	printf("%d\n", nbr);
 }
